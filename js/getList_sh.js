@@ -30,10 +30,10 @@ function parseList(){
 	//console.log(agents[0]);
 	con.connect(function(err){
 			if(err) throw err;
-			console.log("connected");
+			//console.log("connected");
 			return;
 		});
-		console.log(agents);
+		//console.log(agents);
 		for(var i=1; i<Object.keys(agents).length; i++){
 			var agent = agents[i];
 			var mac;
@@ -44,7 +44,7 @@ function parseList(){
 				mac = '\''+agent.network_interfaces.wlan0.mac+'\'';
 				ip = '\''+agent.network_interfaces.wlan0.ip_address+'\'';
 				gateway = '\''+agent.network_interfaces.wlan0.gateway+'\'';
-				query += mac+","+ip+","+gateway+");";
+				query += mac+","+ip+","+gateway+") ON DUPLICATE KEY UPDATE ip="+ip+", gateway="+gateway+";"
 				console.log(query);
 				con.query(query, function(err, result){
 						if(err) throw err;
@@ -57,7 +57,7 @@ function parseList(){
 				query += mac+","+ip+","+gateway+");";
 				console.log(query);
 				con.query(query, function(err, result){
-						if(err) throw err;
+						if(err) console.log(err);
 						//console.log(result);
 					});
 			}
