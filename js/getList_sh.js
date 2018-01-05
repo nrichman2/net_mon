@@ -1,11 +1,18 @@
+//Author: Nate Richman 2017
+
+//This script gethers the netbeez agents from the dashboard
+//And populate their name, ip, gateway, mac, and interface
+//into a sql database
+
+
 var cp = require('child_process');
 var fs = require('fs');
 var mysql = require('mysql');
 var moment = require('moment');
+var log = require('./utils.js').log;
 
 function log(message){
-	var toWrite = '[getList] '+moment().format('MMM Do YYYY, hh:mm:ss')+': '+message+'\n';
-	fs.appendFileSync('/var/log/net_mon/net_mon.log',toWrite);
+	progLog('[getList] ');
 }
 
 var list;
@@ -39,7 +46,7 @@ function parseList(){
 	//console.log(list);
 	var agents = list.agents;
 	//console.log(agents[0]);
-	con.connect(function(err){
+	con.connect(function(err){	//connect to database
 		if(err){
 			log(err.message);
 			throw err;
@@ -77,8 +84,6 @@ function parseList(){
 			gateway_e = '\''+agent.network_interfaces.eth0.gateway+'\'';
 			key_e = '\''+agent.network_interfaces.eth0.key+'\'';
 			var query_e = query_temp + mac_e+","+ip_e+","+gateway_e+","+key_e+", "+name+") ON DUPLICATE KEY UPDATE ip="+ip_e+", gateway="+gateway_e+", interface="+key_e+", name="+name+";";
-			console.log(query);
-			console.log(query_e);
 
 			con.query(query_e, function(err, result){
 				if(err){
@@ -105,4 +110,4 @@ function parseList(){
 	con.end();
 }
 getList();
-setTimeout(parseList, 1000);
+setTimeout(parseList, 1000);  //Couldn't run execSync, so just had to add a delay.
