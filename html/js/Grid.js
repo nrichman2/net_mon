@@ -1,6 +1,9 @@
-var grid;
+
 var width = $(window).width();
 var height = $(window).height();
+
+var agents = []; //[[animal_user,animal_mgmt],
+            //[cssc_user,cssc_mgmt],[nm_user,nm_mgmt]]
 
 var CELLSIZE = 25;
 function init(){
@@ -12,10 +15,6 @@ function init(){
   var animal = grid.append("g")
     .attr("transform","translate("+0+","+0+")")
 
-  var cssc = grid.append("g")
-    .attr("transform","translate("+0+","+0+")")
-
-  var nm432 = grid.append("g")
-    .attr("transform","translate("+0+","+0+")")
-      
 }
+
+init();

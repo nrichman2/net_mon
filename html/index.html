@@ -1,17 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang='en-US'>
+  <meta charset='UTF-8'>
   <head>
     <title>Network Services End-User Dashboard</title>
     <script src='js/other/jquery-3.2.1.min.js'></script>
     <script src='js/other/bootstrap.min.js'></script>
 
-    <script src='js/other/d3-v4.min.js'></script>
-    <script src='js/Grid.js'></script>
-    <script src='css/other/bootstrap.min.css'></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script type='text/javascript' src='js/Grid.js'></script>
+    <!--<script src='css/other/bootstrap.min.css'></script>-->
+    <script type ='text/javascript'>
+      var grid = d3.select("#main").append("svg");
+      grid.append("g");
+    </script>
   </head>
   <body>
-    <div id='main'>
-      <div id='grid'></div>
+    <div id="main">
+
     </div>
   </body>
 </html>
