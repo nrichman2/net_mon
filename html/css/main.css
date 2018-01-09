@@ -1,0 +1,24 @@
+.sub-area {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.highlight.grid-text {
+  font-weight: bold;
+}
+
+.success{
+  fill:rgb(30,200,10);
+}
+.fail{
+  fill:rgb(200,30,10);
+}
+.unknown{
+  fill:rgb(100,100,100);
+}
+.highlight.success {
+  fill: rgb(30,255,10);
+}
+.highlight.fail {
+  fill: rgb(255,30,10);
+}
