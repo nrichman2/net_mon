@@ -1,12 +1,32 @@
-.sub-area {
+
+.area-title{
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.sub-area-title {
   font-size: 20px;
   font-weight: bold;
+}
+
+
+/*Grid text*/
+.grid-text{
+  font-size:15px;
 }
 
 .highlight.grid-text {
   font-weight: bold;
 }
+.agent-text{
+  font-size:15px;
 
+}
+.highlight.agent-text {
+  font-weight: bold;
+}
+
+/*Grid squares*/
 .success{
   fill:rgb(30,200,10);
 }

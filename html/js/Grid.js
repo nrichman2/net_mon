@@ -52,6 +52,33 @@ function generateIndivData(){
   return tot;
 }
 
+function makeArea(name, base){
+  var dat1 = generateIndivData();
+  var dat2 = generateIndivData();
+  var container =main.append("g")
+    .attr("id",name.toLowerCase()+"-container")
+    .attr("transform","translate("+base[0]+","+base[1]+")");
+  var title = container.append("text")
+    .text(name)
+    .attr("text-anchor","middle")
+    .attr("class","area-title");
+
+
+  var title_bound = title.node().getBBox();
+
+  var area = container.append("g")
+    .attr("id",name.toLowerCase())
+    .attr("transform","translate("+0+","+(title_bound.height)+")");
+  var user = generateSubArea(area, name+" User",name.toLowerCase()+"-user",dat1[1],dat1[0],dat1[2], [0,0]);
+  var u_bound = user.node().getBBox();
+
+  var user = generateSubArea(area, name+" Management",name.toLowerCase()+"-mgmt"
+    ,dat2[1],dat2[0],dat2[2], [u_bound.width/2,0]);
+  title.attr("transform","translate("+container.node().getBBox().width/2.5+","+0+")");
+console.log(container.node().getBBox().width);
+
+  return d3.select("#"+name.toLowerCase());
+}
 
 function init(){
   svg = d3.select("#main")
@@ -75,11 +102,19 @@ function init(){
 }
 
 function update(){
-  var dat = generateIndivData();
-var animal_user = generateSubArea(main,"Animal User","animal-user",dat[1],dat[0],dat[2], [0,0]);
-var a_bound = animal_user.node().getBBox();
-var dat2 = generateIndivData();
-var animal_mgmt = generateSubArea(main,"Animal Management","animal-mgmt",
-  dat2[1],dat2[0],dat2[2], [a_bound.width,0]);
+  var animal = makeArea("Animal",[0,0]);
+  var animal_bound = animal.node().getBBox();
+  main.append("rect")
+    .attr("x","0")
+    .attr("y","0")
+    .attr("height",animal_bound.height)
+    .attr("width",animal_bound.width)
+    .attr("fill","none")
+    .attr("stroke-width", "5px")
+    .attr("stroke","rgb(0,0,0)");
+
+  var cssc = makeArea("CSSC", [animal_bound.width, 0]);
+  var cssc_bound = cssc.node().getBBox();
+  //var nm432 = makeArea("432nm",[(animal_bound.width/2+cssc_bound.width/2),0]);
 //var animal_mgmt = generateSubArea(main,"Animal User","animal-user",dat[1],dat[0],dat[2]);
 }

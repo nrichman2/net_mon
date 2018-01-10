@@ -27,7 +27,7 @@ var generateSubArea = function(main, name, id, agents, targets, matrix, base){
     .enter()
     .append("text")
     .attr("text-anchor","start")
-    .attr("class", "target-text")
+    .attr("class", "grid-text")
     .attr("transform",function(d,i){
       return "translate("+(base[0]+i*SIZE+SIZE/2)+","+(base[1]-TEXTPAD)+"), rotate(-45)";
     })
@@ -97,6 +97,7 @@ var generateSubArea = function(main, name, id, agents, targets, matrix, base){
         d3.select("#"+id+"-agent-text-"+evt.row).classed("highlight", true);
         d3.select("#"+id+"-target-text-"+evt.col).classed("highlight", true);
         d3.select("#"+id+"-grid-"+evt.row+"-"+evt.col).classed("highlight", true);
+
       })
       .on("mouseout", function(evt){
         d3.select("#"+id+"-agent-text-"+evt.row).classed("highlight", false);
