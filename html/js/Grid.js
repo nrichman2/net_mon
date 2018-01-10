@@ -19,7 +19,7 @@ function generateIndivData(){
     var baseGateway = 192168001001; //agent vars.
     var column = [];
     for(var col = 0; col<9; col++){
-
+      var stat = Math.floor((Math.random()*1)+1);
       var baseTarget = 192168255255;    //target vars
       var baseName = 0;
       var targetObj = {"ip" : baseTarget, "name":"r-cssc-b116-"+baseName};
@@ -33,7 +33,7 @@ function generateIndivData(){
         "height": 0,
         "row" : 0,
         "col" : 0,
-        "status": 0
+        "status": Math.floor((Math.random()*2))
       };
 
       baseTarget--;
@@ -76,31 +76,10 @@ function init(){
 
 function update(){
   var dat = generateIndivData();
-  var animal_user = generateSubArea(main.append("g"),"Animal User","animal-user",dat[1],dat[0],dat[2]);
+var animal_user = generateSubArea(main,"Animal User","animal-user",dat[1],dat[0],dat[2], [0,0]);
+var a_bound = animal_user.node().getBBox();
+var dat2 = generateIndivData();
+var animal_mgmt = generateSubArea(main,"Animal Management","animal-mgmt",
+  dat2[1],dat2[0],dat2[2], [a_bound.width,0]);
+//var animal_mgmt = generateSubArea(main,"Animal User","animal-user",dat[1],dat[0],dat[2]);
 }
-
-
-
-
-var cellMake = function(cellObj){
-  self = d3.select(this)
-  if(cellObj.status == 1){ //test successful
-    self.attr("class", "success");
-  } else if(cellObj.status == 0){
-    self.attr("class", "fail");
-  } else {
-    self.attr("class","unknown");
-  }
-}
-
-var findGreatestLength = function(textObj){
-  var rect = d3.select(this).node().getBBox();
-  console.log(Math.cos(Math.PI/4));
-  var h = rect.width*Math.cos(Math.PI/4)+TEXTPAD;
-  if(h > upper_pad){
-    upper_pad = h+TEXTPAD*4;
-    console.log(rect.height);
-    console.log(rect.height);
-  }
-}
-init();
