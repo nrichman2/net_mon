@@ -12,7 +12,7 @@ var data = {
   "test_type_id" : 1
 };
 function getPingStatusByAgent(id){
-  return $.getJSON(swagger+'agents/'+id+'test_statuses_by_type.json',data);
+  return $.getJSON(swagger+'agents/'+id+'/test_statuses_by_type.json',data);
 }
 
 console.log(getPingStatusByAgent(2));

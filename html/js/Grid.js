@@ -1,22 +1,20 @@
 
 var width = $(window).width();
 var height = $(window).height();
-var svg;
-var grid;
-var area;
-var user;
-var upper_pad = 0;
-
 
 var TEXTPAD = 5;
-
-var agents = []; //[[animal_user,animal_mgmt],
-            //[cssc_user,cssc_mgmt],[nm_user,nm_mgmt]]
-var targets = [];
-var matrix = [];
+var svg;
+var main;
 
 var SIZE = 25;
+/**
+* Returns [targets, agents, matrix]
+*/
 function generateIndivData(){
+  var tot = [];
+  var targets = [];
+  var agents = [];
+  var matrix = [];
   for(var row = 0; row<9; row++){
     var baseGateway = 192168001001; //agent vars.
     var column = [];
@@ -38,10 +36,7 @@ function generateIndivData(){
         "status": 0
       };
 
-
-
       baseTarget--;
-
       column.push(obj);
     }
     baseName++;
@@ -49,133 +44,42 @@ function generateIndivData(){
     agents.push(agentObj)
     baseGateway++;
     matrix.push(column);
+
   }
+  tot.push(targets);
+  tot.push(agents);
+  tot.push(matrix);
+  return tot;
 }
 
 
-//console.log(generateData())
-
 function init(){
-
   svg = d3.select("#main")
     .append("svg")
-    .attr("width", width)
-    .attr("height", height);
-  area = svg.append("g")
-    .attr("transform","translate("+0+","+0+")");
+    .attr("width",width)
+    .attr("height",height);
 
-  user = area.append("text")
-      .attr("class","sub-area")
-      .attr("text-anchor","middle")
-      .attr("transform","translate("+-30+","+0+")")
-      .text("Animal User Vlans");
-  console.log(user);
-      //.attr("translate("+0+","+0+")");
-  grid = area.append("g")
-    .attr("transform","translate("+0+","+0+")");
-
+  main = svg.append("g");
 
   var zoom = d3.zoom()//code from bl.ocks.org/shawnbot/6518285
     .scaleExtent([.4,5]).on("zoom",function(d){
       var e = d3.event;
       //zoom.translateBy(d,[tx, ty]);
       //console.log(["translate(" + [tx,ty]+")","scale("+e.scale+")"].join(" "));
-      area.attr("transform", e.transform);
+      main.attr("transform", e.transform);
       //    "scale("+e.scale+")"].join(" "));
     });
   svg.call(zoom);
-  generateIndivData()
+
   update();
 }
+
 function update(){
-
-  var data = matrix;
-
-  var targetText = grid.selectAll(".target-text")
-    .data(targets)
-    .enter()
-    .append("text")
-    .attr("text-anchor","start")
-    .attr("transform",function(d,i){
-      console.log("translate("+i*SIZE+","+0+")");
-      return "translate("+(i*SIZE+SIZE/2)+","+-TEXTPAD+"), rotate(-45)";
-    })
-    .text(function(d){
-      return d.name;
-    })
-    .each(findGreatestLength);
-    console.log(upper_pad);
-  user.attr("transform","translate("+0+","+(-upper_pad-20)+")");
-  targetText.attr("id", function(d,i){
-    return "target-text-"+i;
-  })
-  .attr("class","grid-text");
-  targetText.exit()
-    .remove();
-
-  var agentText = grid.selectAll(".agent-text")
-    .data(agents)
-    .enter()
-    .append("text");
-  agentText.attr("text-anchor","end")
-    .text(function(d){
-      return d.gateway;
-    })
-    .attr("transform", function(d,i){
-      return "translate("+-TEXTPAD+","+(i*SIZE+SIZE/2+10/2)+")";
-    })
-    .attr("style","font-size: 15px")
-    .attr("id", function(d,i){
-      return "agent-text-"+i;
-    })
-    .attr("class","grid-text");
-  agentText.exit().remove();
-
-
-  var rows = grid.selectAll(".row")
-    .data(data)
-      .enter()
-      .append("g")
-      .attr("class", "row");
-
-  var cells = rows.selectAll(".cell")
-    .data(function(d,i){    //d is an array, d is current value, i is index
-      var col = 0;
-      return d.map(function(obj){ //sets obj at i to have row of i, returns obj
-
-        obj.col = col;
-        obj.row = i;      //set column variable
-        col++;
-        return obj;
-      })
-    });
-  cells.enter()
-      .append("rect")
-      .attr("width", SIZE)
-      .attr("height", SIZE)
-      .attr("transform", function(d, i){ return "translate("+i*SIZE+","+d.row*SIZE+")"})
-      .attr("stroke-width","1px")
-      .attr("stroke","rgb(0,0,0)")
-      .attr("id",function(d){
-        return "grid"+d.row+"-"+d.col;
-      })
-      .attr("class", "grid")
-      .each(cellMake)
-      .on("mouseover", function(evt){
-        d3.select("#agent-text-"+evt.row).classed("highlight", true);
-        d3.select("#target-text-"+evt.col).classed("highlight", true);
-        d3.select("#grid"+evt.row+"-"+evt.col).classed("highlight", true);
-      })
-      .on("mouseout", function(evt){
-        d3.select("#agent-text-"+evt.row).classed("highlight", false);
-        d3.select("#target-text-"+evt.col).classed("highlight", false);
-        d3.select("#grid"+evt.row+"-"+evt.col).classed("highlight", false);
-      });
-
-  cells.exit()
-    .remove();
-  //"transform", function(d, i){ return "translate("+i*SIZE+","+d.row*SIZE+")"});
+  var dat = generateIndivData();
+  var animal_user = generateSubArea(main.append("g"),"Animal User","animal-user",dat[1],dat[0],dat[2]);
 }
+
+
 
 
 var cellMake = function(cellObj){
@@ -191,7 +95,12 @@ var cellMake = function(cellObj){
 
 var findGreatestLength = function(textObj){
   var rect = d3.select(this).node().getBBox();
-  if(rect.height > upper_pad){
-    upper_pad = rect.height+10;
+  console.log(Math.cos(Math.PI/4));
+  var h = rect.width*Math.cos(Math.PI/4)+TEXTPAD;
+  if(h > upper_pad){
+    upper_pad = h+TEXTPAD*4;
+    console.log(rect.height);
+    console.log(rect.height);
   }
 }
+init();
