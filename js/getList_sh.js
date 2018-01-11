@@ -9,7 +9,7 @@ var cp = require('child_process');
 var fs = require('fs');
 var mysql = require('mysql');
 var moment = require('moment');
-var log = require('./utils.js').log;
+var progLog = require('./utils.js').progLog;
 
 function log(message){
 	progLog('[getList] ');
@@ -18,19 +18,13 @@ function log(message){
 var list;
 function getList(){
 	var quit=0;
-	var  mine = cp.exec('sh /home/nrichman/Documents/net_mon/shell/getList.sh',
-  	(error, stdout, stderr) => {
-    	list = JSON.parse(stdout);
-			log("Received list from netbeez");
-    	//console.log(`${stdout}`);
-			//console.log(`${stderr}`);
-    });
-
+	var  mine = cp.execSync('sh /home/nrichman/Documents/net_mon/shell/getList.sh');
+	list = JSON.parse(mine);
+	console.log(`${list}`);
 }
+
 function parseList(){
-
-
-	if(list ==null){
+	if(list == null){
 		//console.log('list not there');
 		log('List not there');
 		return;
@@ -44,8 +38,8 @@ function parseList(){
 	});
 
 	//console.log(list);
-	var agents = list.agents;
-	//console.log(agents[0]);
+	var agents = list;
+	console.log(agents[0]);
 	con.connect(function(err){	//connect to database
 		if(err){
 			log(err.message);
@@ -110,4 +104,5 @@ function parseList(){
 	con.end();
 }
 getList();
-setTimeout(parseList, 1000);  //Couldn't run execSync, so just had to add a delay.
+parseList();
+  //Couldn't run execSync, so just had to add a delay.
