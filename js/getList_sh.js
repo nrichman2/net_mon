@@ -10,7 +10,9 @@ var fs = require('fs');
 var mysql = require('mysql');
 var moment = require('moment');
 var progLog = require('./utils.js').progLog;
+var yaml = require('js-yaml');
 
+var config_file = require("./config.yaml");
 function log(message){
 	progLog('[getList] ');
 }
@@ -30,13 +32,14 @@ function parseList(){
 		return;
 	}
 
+	var config_file = require("./config.yaml");
+	var config = JSON.stringify(config_file);
 	var con = mysql.createConnection({
-		host: "localhost",
-		user: "netbeez_api",
-		password: "netbeez",
-		database: "netbeez"
+	  host: "localhost",
+	  user: config.username,
+	  password: config.password,
+	  database: config.database
 	});
-
 	//console.log(list);
 	var agents = list;
 	console.log(agents[0]);
