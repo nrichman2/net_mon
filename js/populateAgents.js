@@ -2,7 +2,7 @@
 
 //This script gethers the netbeez agents from the dashboard
 //And populate their name, ip, gateway, mac, and interface
-//into a sql database
+//into the sql database
 
 
 var cp = require('child_process');
@@ -10,9 +10,8 @@ var fs = require('fs');
 var mysql = require('mysql');
 var moment = require('moment');
 var progLog = require('./utils.js').progLog;
-var yaml = require('js-yaml');
 
-var config_file = require("./config.yaml");
+
 function log(message){
 	progLog('[getList] ');
 }
@@ -22,7 +21,6 @@ function getList(){
 	var quit=0;
 	var  mine = cp.execSync('sh /home/nrichman/Documents/net_mon/shell/getList.sh');
 	list = JSON.parse(mine);
-	console.log(`${list}`);
 }
 
 function parseList(){
@@ -32,17 +30,15 @@ function parseList(){
 		return;
 	}
 
-	var config_file = require("./config.yaml");
-	var config = JSON.stringify(config_file);
+	var config_file = require("./config.json");
+	var config = JSON.parse(JSON.stringify(config_file));
 	var con = mysql.createConnection({
 	  host: "localhost",
 	  user: config.username,
 	  password: config.password,
 	  database: config.database
 	});
-	//console.log(list);
 	var agents = list;
-	console.log(agents[0]);
 	con.connect(function(err){	//connect to database
 		if(err){
 			log(err.message);
@@ -51,37 +47,46 @@ function parseList(){
 		log("Connected to database");
 		return;
 	});
-	//console.log(agents);
-	for(var i=0; i<Object.keys(agents).length; i++){
-		var agent = agents[i];
+
+	var ageLength = agents.id ? 1 : Object.keys(agents).length;
+
+	for(var i=0; i<ageLength-1; i++){
+
 		var mac;
 		var ip;
 		var gateway;
 		var query_temp = "INSERT INTO agents (mac, ip, gateway, interface,name) VALUES (";
+		var vlan;
+
+		//Check if only one agent
+		var agent = agents.id ? agents : agents[i];
 		if(agent.network_interfaces.eth0){
 			var query = query_temp
 			name = '\''+agent.name+'\'';
+
+			//eth0 and wlan0 connected: Wlan0 block
 			if(agent.network_interfaces.wlan0){
-			mac = '\''+agent.network_interfaces.wlan0.mac+'\'';
-			ip = '\''+agent.network_interfaces.wlan0.ip_address+'\'';
-			gateway = '\''+agent.network_interfaces.wlan0.gateway+'\'';
-			key = '\''+agent.network_interfaces.wlan0.key+'\'';
-			query += mac+","+ip+","+gateway+","+key+", "+name+") ON DUPLICATE KEY UPDATE ip="+ip+", gateway="+gateway+", interface="+key+",name="+name+";";
-			con.query(query, function(err, result){
-				if(err){
-					log(err.message);
-					throw err;
-				}
-				log("Wrote to db");
-			});
+				mac = '\''+agent.network_interfaces.wlan0.mac+'\'';
+				ip = '\''+agent.network_interfaces.wlan0.ip_address+'\'';
+				gateway = '\''+agent.network_interfaces.wlan0.gateway+'\'';
+				key = '\''+agent.network_interfaces.wlan0.key+'\'';
+				vlan = agent.network_interfaces.wlan0.gateway.split('.')[3]; //takes last grouping of ip.
+				query += mac+","+ip+","+gateway+","+key+", "+name+") ON DUPLICATE KEY UPDATE ip="+ip+", gateway="+gateway+", interface="+key+",name="+name+";";
+				con.query(query, function(err, result){
+					if(err){
+						log(err.message);
+						throw err;
+					}
+					log("Wrote to db");
+				});
 			}
+			//eth0 block
 			mac_e = '\''+agent.network_interfaces.eth0.mac+'\'';
 			ip_e = '\''+agent.network_interfaces.eth0.ip_address+'\'';
 			if(!ip_e) console.log("null")
 			gateway_e = '\''+agent.network_interfaces.eth0.gateway+'\'';
 			key_e = '\''+agent.network_interfaces.eth0.key+'\'';
 			var query_e = query_temp + mac_e+","+ip_e+","+gateway_e+","+key_e+", "+name+") ON DUPLICATE KEY UPDATE ip="+ip_e+", gateway="+gateway_e+", interface="+key_e+", name="+name+";";
-
 			con.query(query_e, function(err, result){
 				if(err){
 					log(err.message);
@@ -89,7 +94,8 @@ function parseList(){
 				}
 				log("Wrote to db");
 			});
-		} else {
+
+		} else { //wlan0 only
 			mac = agent.network_interfaces.eth0.mac;
 			ip = agent.network_interfaces.eth0.ip_address;
 			gateway = agent.network_interfaces.eth0.gateway;
@@ -108,4 +114,3 @@ function parseList(){
 }
 getList();
 parseList();
-  //Couldn't run execSync, so just had to add a delay.
