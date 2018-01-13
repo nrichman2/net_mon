@@ -16,28 +16,30 @@ con.connect(function(err){	//connect to database
     progLog("[Server] "+err.message);
     throw err;
   }
+  console.log("connected");
   progLog("[Server] Connected to database");
   return;
 });
-function getAgents(){
+function getAgents(callback){
   var query = "SELECT * FROM agents"
-  var agents=[];
+  var agents = "";
   //todo create tables in mysql for vlans
-  con.query(query, function(err, result){
-    if(err){
-      progLog("[Server] "+err.message);
-      throw err;
-    }
-    agents = JSON.parse(JSON.stringify(result));
-    console.log(JSON.parse(JSON.stringify(result))[0]);
+  con.query(query, function(err, rows){
+    callback(err, rows);
   });
-  return "1";
+  return agents ? agents : "";
 }
+
+
 
 var listener = function(request, response){
   var url = request.url;
-  var agents = getAgents();
-  response.end("<h1>Hello, World!</h1>");
+  var agents = "";
+  response.writeHead('200', {'Content-type': 'application/json'});
+  agents = getAgents(function(err, rows){
+    response.end(JSON.stringify(rows));
+  });
+
 }
 const port = 4000;
 var server = http.createServer(listener);
