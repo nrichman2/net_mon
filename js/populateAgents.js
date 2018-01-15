@@ -4,7 +4,7 @@
 //And populate their name, ip, gateway, mac, and interface
 //into the sql database
 
-
+var date = new Date();
 var cp = require('child_process');
 var fs = require('fs');
 var mysql = require('mysql');
@@ -13,7 +13,7 @@ var progLog = require('./utils.js').progLog;
 
 
 function log(message){
-	progLog('[getList] ');
+	progLog('[populateAgents] ');
 }
 
 var list;
@@ -21,6 +21,8 @@ function getList(){
 	var quit=0;
 	var  mine = cp.execSync('sh /home/nrichman/Documents/net_mon/shell/getList.sh');
 	list = JSON.parse(mine);
+	var finished = new Date();
+	console.log(finished.getTime()-date.getTime());
 }
 
 function parseList(){
@@ -111,6 +113,8 @@ function parseList(){
 		}
 	}
 	con.end();
+	var newDate = new Date();
+	console.log(newDate.getTime()-date.getTime());
 }
 getList();
 parseList();

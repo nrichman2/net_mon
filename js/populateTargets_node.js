@@ -13,6 +13,7 @@ config = JSON.parse(JSON.stringify(config_file));
 var date = new Date();
 
 
+
 console.log(date.getTime());
 function getList(callback){
   var con = mysql.createConnection({
@@ -31,33 +32,33 @@ function getList(callback){
     return;
   });
 
-  var res = cp.execSync("sh /home/nrichman/Documents/net_mon/shell/getTargets.sh");
-  list = JSON.parse(res);
-  //console.log(list);
-  parseList(list, con);
-//  var options = {
-//    hostname : 'wisc.netbeezcloud.net',
-//    path: '/v1/nb_targets.json',
-//    cert: fs.readFileSync('/home/nrichman/Documents/net_mon/encrypt/*.netbeezcloud.pem'),
-//    headers: {
-//      'Authorization' : config.auth_key,
-//      'Accept' : "application/json",
-//      'API-VERSION' : 'v1'
-//      },
-//  };
-//  var request = https.get(options, function(res){
+  //var res = cp.execSync("sh /home/nrichman/Documents/net_mon/shell/getTargets.sh");
+  //list = JSON.parse(res);
+  var options = {
+    hostname : 'wisc.netbeezcloud.net',
+    path: '/v1/nb_targets.json',
+    cert: fs.readFileSync('/home/nrichman/Documents/net_mon/encrypt/*.netbeezcloud.pem'),
+    headers: {
+      'Authorization' : config.auth_key,
+      'Accept' : "application/json",
+      'API-VERSION' : 'v1'
+      },
+  };
+  var request = https.get(options, function(res){
   //  console.log(body);
-//  var list = [];
-//    res.setEncoding('utf8');
-//    res.on("data", function(d){
+  var list = [];
+    res.setEncoding('utf8');
+    res.on("data", function(d){
       //list = JSON.parse(d);
       //console.log(list);
-//      callback(d);
-//    });
-//  });
+      list = JSON.parse(d);
+
+      callback(list, con);
+    });
+  });
 }
 function parseList(list, db){
-  console.log(list);
+  //console.log(d);
 
   var targets = list.targets;
   var id = -1;    //Unique
@@ -65,14 +66,15 @@ function parseList(list, db){
   var ip = ""; //Unique
   var test_template = [];
   var agents = [];
-
+  //var query = "INSERT INTO targets (id, name, ip, agents) VALUES ("
   var newDate = new Date();
   console.log(newDate.getTime()-date.getTime());
+
   for(var i=0; i<targets.length;i++){
     agents = targets[i].agent_ids;
     test_template = targets[i].nb_test_templates;
-    //console.log(test_template[i]);
-  for(j = 0; j< Object.keys(test_template).length; j++){
+
+    for(j = 0; j<Object.keys(test_template).length; j++){
       var query = "INSERT INTO targets (id, name, ip, agents) VALUES ("
       var d = test_template[Object.keys(test_template)[j]];
       if(d.heir_type == "PingTemplate"){
@@ -80,7 +82,7 @@ function parseList(list, db){
         id = d.id;
         ip = d.target;
         query+= name+","+id+","+ip+","+agents+");" //agents is JSON datatype
-
+        console.log(query);
         db.query(query, function(err, result){
 					if(err){
 						progLog("[populateTargets] "+err.message);
@@ -93,6 +95,6 @@ function parseList(list, db){
   }
   //console.log(targets);
 }
-getList();
+getList(parseList);
 
 //console.log(request);
