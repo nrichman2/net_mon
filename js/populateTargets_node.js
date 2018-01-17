@@ -58,6 +58,7 @@ function getList(callback){
         callback(list,con);
       } catch(e){
         console.log("Reading from netbeez error");
+        throw e;
       }
     })
   });
@@ -71,7 +72,7 @@ function parseList(list, db){
   var name = "";
   var ip = ""; //Unique
   var test_template = [];
-  var agents = [];
+  var agents_tests = []; //Dictionary of {agent_id:test_id}, string value
   //var query = "INSERT INTO targets (id, name, ip, agents) VALUES ("
   var newDate = new Date();
   console.log(newDate.getTime()-date.getTime());
@@ -81,13 +82,21 @@ function parseList(list, db){
     test_template = targets[i].nb_test_templates;
 
     for(j = 0; j<Object.keys(test_template).length; j++){
-      var query = "INSERT INTO targets (id, name, ip, agents) VALUES ("
+      var query = "INSERT INTO targets (id, name, ip, agent_test_dict) VALUES ("
       var d = test_template[Object.keys(test_template)[j]];
+      //console.log(d);
       if(d.heir_type == "PingTemplate"){
         name = d.label;
         id = d.id;
         ip = d.target;
-        query+= name+","+id+","+ip+","+agents+");" //agents is JSON datatype
+        for(var k = 0; k<d.nb_test_ids.length; k++){
+          var toPush = {
+            "agent_id" : agents[k],
+            "test_id"  : d.nb_test_ids[k]
+          };
+          agents_tests.push(toPush);
+        }
+        query+= name+","+id+","+ip+","+JSON.stringify(agents_tests)+");" //agents is JSON datatype
         console.log(query);
         db.query(query, function(err, result){
 					if(err){
@@ -96,6 +105,7 @@ function parseList(list, db){
 					}
 					progLog("[populateTargets] Wrote to db");
 				});
+        agents_tests = [];
       }
     }
   }
