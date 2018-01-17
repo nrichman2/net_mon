@@ -13,8 +13,6 @@ config = JSON.parse(JSON.stringify(config_file));
 var date = new Date();
 
 
-
-console.log(date.getTime());
 function getList(callback){
   var con = mysql.createConnection({
     host: "localhost",
@@ -47,19 +45,27 @@ function getList(callback){
   var request = https.get(options, function(res){
   //  console.log(body);
   var list = [];
+  var rawData = '';
     res.setEncoding('utf8');
-    res.on("data", function(d){
+    res.on("data", function(chunk){
       //list = JSON.parse(d);
-      //console.log(list);
-      list = JSON.parse(d);
-
-      callback(list, con);
+      //console.log(list)
+      rawData += chunk;
     });
+    res.on('end', function(){
+      try{
+        list = JSON.parse(rawData);
+        callback(list,con);
+      } catch(e){
+        console.log("Reading from netbeez error");
+      }
+    })
   });
 }
+
+
 function parseList(list, db){
   //console.log(d);
-
   var targets = list.targets;
   var id = -1;    //Unique
   var name = "";

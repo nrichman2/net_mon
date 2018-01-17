@@ -27,7 +27,6 @@ function getAgents(callback){
   con.query(query, function(err, rows){
     callback(err, rows);
   });
-  return agents ? agents : "";
 }
 
 
@@ -37,6 +36,7 @@ var listener = function(request, response){
   var agents = "";
   response.writeHead('200', {'Content-type': 'application/json'});
   agents = getAgents(function(err, rows){
+    progLog("[Server] responding with agents JSON");
     response.end(JSON.stringify(rows));
   });
 
