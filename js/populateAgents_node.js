@@ -10,6 +10,7 @@ var fs = require('fs');
 var mysql = require('mysql');
 var moment = require('moment');
 var progLog = require('./utils.js').progLog;
+var https = require('https');
 
 
 function log(message){
@@ -17,43 +18,81 @@ function log(message){
 }
 
 var list;
-function getList(){
-	var quit=0;
-	var  mine = cp.execSync('sh /home/nrichman/Documents/net_mon/shell/getList.sh');
-	list = JSON.parse(mine);
-	var finished = new Date();
-	console.log("got list:"+(finished.getTime()-date.getTime()));
+function getList(callback){
+	//var q
+	//var  mine = cp.execSync('sh /home/nrichman/Documents/net_mon/shell/getList.sh');
+	//list = JSON.parse(mine);
+	//var finished = new Date();
+	//console.log("got list:"+(finished.getTime()-date.getTime()));
+  var config_file = require("./config.json");
+  var config = JSON.parse(JSON.stringify(config_file));
+  var con = mysql.createConnection({
+    host: "localhost",
+    user: config.username,
+    password: config.password,
+    database: config.database
+  });
+
+  con.connect(function(err){	//connect to database
+    if(err){
+      log(err.message);
+      throw err;
+    }
+    console.log("Connected to database");
+    return;
+  });
+
+  var options = {
+    hostname : 'wisc.netbeezcloud.net',
+    path: '/agents.json',
+    cert: fs.readFileSync('/home/nrichman/Documents/net_mon/encrypt/*.netbeezcloud.pem'),
+    headers: {
+      'Authorization' : config.auth_key,
+      'Accept' : "text/html",
+      'API-VERSION' : 'v1'
+      },
+  };
+  var request = https.get(options, function(res){
+
+    var list = [];
+    var rawData = '';
+    res.setEncoding('utf8');
+    res.on("data", function(chunk){
+
+      rawData += chunk;
+    });
+    res.on('end', function(){
+      console.log(request.headers+" My headers ");
+      try{
+        list = JSON.parse(rawData);
+        console.log(list);
+        callback(list,con);
+      } catch(e){
+        console.log(list);
+        console.log(res.headers);
+        console.log("Reading from netbeez error");
+        throw e;
+      }
+    })
+  });
+
 }
 
-function parseList(){
+function parseList(list,con){
 	if(list == null){
 		//console.log('list not there');
 		log('List not there');
 		return;
 	}
 
-	var config_file = require("./config.json");
-	var config = JSON.parse(JSON.stringify(config_file));
-	var con = mysql.createConnection({
-	  host: "localhost",
-	  user: config.username,
-	  password: config.password,
-	  database: config.database
-	});
+
 	var agents = list;
-	con.connect(function(err){	//connect to database
-		if(err){
-			log(err.message);
-			throw err;
-		}
-		console.log("Connected to database");
-		return;
-	});
-	console.log(agents);
-	var ageLength = agents.id ? 1 : Object.keys(agents).length;
 
-	for(var i=0; i<ageLength-1; i++){
+	//var ageLength = agents.id ? 1 : Object.keys(agents).length;
 
+	//for(var i=0; i<ageLength-1; i++){
+  //console.log(agents);
+  for(var i =0; i<agents.length; i++){
 		var mac;
 		var ip;
 		var gateway;
@@ -61,8 +100,11 @@ function parseList(){
 		var vlan;
 
 		//Check if only one agent
-		var agent = agents.id ? agents : agents[i];
-		console.log(agent);
+		//var agent = agents.id ? agents : agents[i];
+
+    var agent = agents[i];
+
+    console.log(agent);
 		if(agent.network_interfaces.eth0){
 			var query = query_temp
 			name = '\''+agent.name+'\'';
@@ -75,7 +117,8 @@ function parseList(){
 				key = '\''+agent.network_interfaces.wlan0.key+'\'';
 				vlan = agent.network_interfaces.wlan0.gateway.split('.')[3]; //takes last grouping of ip.
 				query += mac+","+ip+","+gateway+","+key+", "+name+") ON DUPLICATE KEY UPDATE ip="+ip+", gateway="+gateway+", interface="+key+",name="+name+";";
-				con.query(query, function(err, result){
+        console.log(query);
+        con.query(query, function(err, result){
 					if(err){
 						log(err.message);
 						throw err;
@@ -118,5 +161,4 @@ function parseList(){
 	var newDate = new Date();
 	console.log(newDate.getTime()-date.getTime());
 }
-getList();
-parseList();
+getList(parseList);

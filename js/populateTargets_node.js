@@ -82,13 +82,13 @@ function parseList(list, db){
     test_template = targets[i].nb_test_templates;
 
     for(j = 0; j<Object.keys(test_template).length; j++){
-      var query = "INSERT INTO targets (id, name, ip, agent_test_dict) VALUES ("
+      var query = "INSERT INTO targets (name, ip, id, area, agentids) VALUES ("
       var d = test_template[Object.keys(test_template)[j]];
       //console.log(d);
       if(d.heir_type == "PingTemplate"){
-        name = d.label;
-        id = d.id;
-        ip = d.target;
+        name = '\''+d.label+'\'';
+        id = '\''+d.id+'\'';
+        ip = '\''+d.target+'\'';
         for(var k = 0; k<d.nb_test_ids.length; k++){
           var toPush = {
             "agent_id" : agents[k],
@@ -96,7 +96,8 @@ function parseList(list, db){
           };
           agents_tests.push(toPush);
         }
-        query+= name+","+id+","+ip+","+JSON.stringify(agents_tests)+");" //agents is JSON datatype
+        //+'\''+JSON.stringify(agents_tests)+'\''+
+        query+= name+","+ip+","+id+",\' \',"+"\'"+JSON.stringify(agents_tests)+"\'"+");"; //agents is JSON datatype
         console.log(query);
         db.query(query, function(err, result){
 					if(err){
