@@ -27,26 +27,68 @@ var mySQLget = function(con){
   this.generateMatrix = function(targetList){
     var matrix = [];
 
-
-    for(var i = 0; i<targetList.length; i++){
+    var column =0;
+    targetList.forEach(function(target){
       var query = "select json_extract(agentids, '$[*]') from targets where id=";
-      var id = targetList[i].id;
+      var id = target.id;
       query+= "\'"+id+"\';";
-    //  console.log(id);
+      console.log(column+" outer")
       con.query(query, function(err, rows){
         //pass list of the form for each target [{"test_id": , "agent_id": },...]
         //console.log(JSON.parse(rows));
-          console.log(id);
-        makeColumn(err, rows, matrix, i, id);
+        makeColumn(err, rows, matrix, column, id);
       });
-
-    }
-    console.log(matrix);
+      column++;
+    });
+    //console.log(matrix);
   }
 
-  function makeColumn(err, rows, matrix, i, id){
 
-    var thisRow = matrix[i];
+  //Code from
+
+  function async(arg, callback){
+    setTimeout(function() {callback(arg);}, 200);
+
+  }
+
+  function final() {}
+  function helper(con,query){
+      var query = "select json_extract(agentids, '$[*]') from targets where id=";
+    con.query
+  }
+
+  this.makeMat = function(matrix, index, list, con){
+
+    var query = "select json_extract(agentids, '$[*]') from targets where id=";
+    var id = list[index].id;
+    query+= "\'"+id+"\';";
+    console.log(id);
+    if(index < list.length){
+      con.query(query, function(err, rows){
+        var weirdQuery = 'json_extract(agentids, \'$[*]\')';
+        var list = [];
+        try{
+          //data returned is in rawdata stream json stringify turns that into json string, then need to parse
+          //because mysql returns query and row, in list form, need to access element [0] and then the value
+          //at the query [weirdQuery]
+          list = JSON.parse(JSON.parse(JSON.stringify(rows))[0][weirdQuery]);
+        } catch (err){
+          progLog("[mySQLget] parsing JSON error");
+        }
+        matrix[index] = new Array(list.length);
+        for(var j = 0; j<list.length; j++){
+
+          list[j].target_id = id;
+          matrix[index][j] = list[j];
+        }
+        var pass = index++;
+        mySQLget.makeMat(matrix,pass,list,con);
+      });
+    }
+  }
+
+  function makeColumn(err, rows, matrix, column, id){
+    console.log(column+" inner");
     var list = [];
     var weirdQuery = 'json_extract(agentids, \'$[*]\')';
     try{
@@ -58,9 +100,9 @@ var mySQLget = function(con){
       progLog("[mySQLget] parsing JSON error");
     }
     for(var j = 0; j<list.length; j++){
-      matrix[i] = new Array(list.length);
+      matrix[column] = new Array(list.length);
       list[j].target_id = id;
-      matrix[i][j] = list[j];
+      matrix[column][j] = list[j];
     }
 
   }
@@ -91,7 +133,8 @@ var mySQLget = function(con){
 }
 
 var thisMySQL = new mySQLget(con);
-
+var matrix = [];
 thisMySQL.getTargets("animal", function(err, rows){
-  thisMySQL.generateMatrix(JSON.parse(JSON.stringify(rows)));
+  thisMySQL.makeMat(matrix,0,JSON.parse(JSON.stringify(rows)),con);
+  //thisMySQL.generateMatrix(JSON.parse(JSON.stringify(rows)));
 });
