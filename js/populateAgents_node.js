@@ -38,7 +38,7 @@ function getList(callback){
       log(err.message);
       throw err;
     }
-    console.log("Connected to database");
+    log("Connected to database");
     return;
   });
 
@@ -62,15 +62,11 @@ function getList(callback){
       rawData += chunk;
     });
     res.on('end', function(){
-      console.log(request.headers+" My headers ");
       try{
         list = JSON.parse(rawData);
-        console.log(list);
         callback(list,con);
       } catch(e){
-        console.log(list);
-        console.log(res.headers);
-        console.log("Reading from netbeez error");
+        log("Reading from netbeez error");
         throw e;
       }
     })
@@ -96,45 +92,47 @@ function parseList(list,con){
 		var mac;
 		var ip;
 		var gateway;
-		var query_temp = "INSERT INTO agents (mac, ip, gateway, interface,name) VALUES (";
+		var query_temp = "INSERT INTO agents (mac, ip, gateway, vlan, id, name, interface) VALUES (";
 		var vlan;
+		var name;
+		var id;
 
 		//Check if only one agent
 		//var agent = agents.id ? agents : agents[i];
 
     var agent = agents[i];
-
-    console.log(agent);
-		if(agent.network_interfaces.eth0){
-			var query = query_temp
+		name = '\''+agent.name+'\'';
+		id = agent.id;
+		if(agent.network_interfaces.wlan0){
 			name = '\''+agent.name+'\'';
 
 			//eth0 and wlan0 connected: Wlan0 block
-			if(agent.network_interfaces.wlan0){
-				mac = '\''+agent.network_interfaces.wlan0.mac+'\'';
-				ip = '\''+agent.network_interfaces.wlan0.ip_address+'\'';
-				gateway = '\''+agent.network_interfaces.wlan0.gateway+'\'';
-				key = '\''+agent.network_interfaces.wlan0.key+'\'';
-				vlan = agent.network_interfaces.wlan0.gateway.split('.')[3]; //takes last grouping of ip.
-				query += mac+","+ip+","+gateway+","+key+", "+name+") ON DUPLICATE KEY UPDATE ip="+ip+", gateway="+gateway+", interface="+key+",name="+name+";";
-        console.log(query);
-        con.query(query, function(err, result){
-					if(err){
-						log(err.message);
-						throw err;
-					}
-					console.log(query);
-					log("Wrote to db");
-				});
-			}
+				//mac = '\''+agent.network_interfaces.wlan0.mac+'\'';
+				//ip = '\''+agent.network_interfaces.wlan0.ip_address+'\'';
+				//gateway = '\''+agent.network_interfaces.wlan0.gateway+'\'';
+				//key = '\''+agent.network_interfaces.wlan0.key+'\'';
+				//vlan = 99999; //default //agent.network_interfaces.wlan0.gateway.split('.')[3]; //takes last grouping of ip.
+
+				//query += mac+","+ip+","+gateway+","+key+", "+name+") ON DUPLICATE KEY UPDATE ip="+ip+", gateway="+gateway+", interface="+key+",name="+name+";";
+      //  console.log(query);
+        //con.query(query, function(err, result){
+				//	if(err){
+				//		log(err.message);
+				//		throw err;
+				//	}
+				//	console.log(query);
+				//	log("Wrote to db");
+			//	});
+			//}
 			//eth0 block
-			mac_e = '\''+agent.network_interfaces.eth0.mac+'\'';
-			ip_e = '\''+agent.network_interfaces.eth0.ip_address+'\'';
-			if(!ip_e) console.log("null")
-			gateway_e = '\''+agent.network_interfaces.eth0.gateway+'\'';
-			key_e = '\''+agent.network_interfaces.eth0.key+'\'';
-			var query_e = query_temp + mac_e+","+ip_e+","+gateway_e+","+key_e+", "+name+") ON DUPLICATE KEY UPDATE ip="+ip_e+", gateway="+gateway_e+", interface="+key_e+", name="+name+";";
-			con.query(query_e, function(err, result){
+			mac = '\''+agent.network_interfaces.wlan0.mac+'\'';
+			ip = '\''+agent.network_interfaces.wlan0.ip_address+'\'';
+			gateway = '\''+agent.network_interfaces.wlan0.gateway+'\'';
+			key = '\''+agent.network_interfaces.wlan0.key+'\'';
+			vlan = "99999";
+
+			var query = query_temp + mac+","+ip+","+gateway+", "+vlan+","+id+", "+name+", "+key+") ON DUPLICATE KEY UPDATE ip="+ip+", gateway="+gateway+", interface="+key+", name="+name+", vlan="+vlan+";";
+			con.query(query, function(err, result){
 				if(err){
 					log(err.message);
 					throw err;
@@ -142,12 +140,14 @@ function parseList(list,con){
 				log("Wrote to db");
 			});
 
-		} else { //wlan0 only
-			mac = agent.network_interfaces.eth0.mac;
-			ip = agent.network_interfaces.eth0.ip_address;
-			gateway = agent.network_interfaces.eth0.gateway;
-			query += mac+","+ip+","+gateway+");";
-			console.log(query);
+		} else { //eth0
+			mac = '\''+agent.network_interfaces.eth0.mac+'\'';
+			ip = '\''+agent.network_interfaces.eth0.ip_address+'\'';
+			gateway = '\''+agent.network_interfaces.eth0.gateway+'\'';
+			key = '\''+agent.network_interfaces.eth0.key+'\'';
+			vlan = "99999";
+
+			var query = query_temp + mac+","+ip+","+gateway+", "+vlan+","+id+", "+name+", "+key+") ON DUPLICATE KEY UPDATE ip="+ip+", gateway="+gateway+", interface="+key+", name="+name+", vlan="+vlan+";";
 			con.query(query, function(err, result){
 				if(err){
 					log(err.message);
